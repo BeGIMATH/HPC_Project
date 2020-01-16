@@ -30,14 +30,15 @@ void kadane(const VectorXd &array, double &maxSum, int &l, int &r)
 int main()
 {
     //Size of the array
-    int n = 10;
+    int n = 8;
     //An array  o size n filled with random numbers between (-1,1)
     VectorXd v = VectorXd::Random(n);
-    std::cout << " [ " << v.transpose() << " ] " << std::endl;
+
     for (int i = 0; i < v.size(); i++)
     {
         v(i) = static_cast<int>(10.0 * v(i));
     }
+    //std::cout << " [ " << v.transpose() << " ] " << std::endl;
     double maxSum;
     int left, right;
     kadane(v, maxSum, left, right);
@@ -49,6 +50,6 @@ int main()
         V(i) = v(i + left);
     }
     std::cout << maxSum << "  " << std::endl;
-    std::cout << "  " << left << "  " << right << "  " << std::endl;
+    //std::cout << "  " << left << "  " << right << "  " << std::endl;
     std::cout << " [ " << V.transpose() << " ] " << std::endl;
 }

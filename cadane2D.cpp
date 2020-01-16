@@ -52,10 +52,10 @@ void maxSubarray2D(const MatrixXd &array,
             if (sum > maxSum)
             {
                 maxSum = sum;
-                left = i;
-                right = j;
-                top = start;
-                bottom = finish;
+                left = start;
+                right = finish;
+                top = i;
+                bottom = j;
             }
         }
     }
@@ -64,25 +64,34 @@ void maxSubarray2D(const MatrixXd &array,
 int main()
 {
     /// Size of the matrix
-    int n = 10;
+    int n = 5;
 
     /// nxn Matrix filled with random numbers between (-1,1)
     MatrixXd m = MatrixXd::Random(n, n);
+    for (int i = 0; i < m.rows(); i++)
+    {
+        for (int j = 0; j < m.cols(); j++)
+        {
+            m(i, j) = static_cast<int>(10.0 * m(i, j));
+        }
+    }
     double maxSum;
     int left, right, top, bottom;
     maxSubarray2D(m, maxSum, left, right, top, bottom);
     std::cout << m << std::endl;
-    std::cout << (right - left) << (bottom - top) << std::endl;
+    std::cout << "----------------------------" << std::endl;
     MatrixXd M = MatrixXd(bottom - top, right - left);
     for (int i = 0; i < M.rows(); i++)
     {
         for (int j = 0; j < M.cols(); j++)
         {
-            M(i, j) = m(i + top, j + left);
+            M(i, j) = m(i + top, j + right - 1);
         }
     }
 
-    std::cout << maxSum << " "
-              << " " << left << " " << right << "  " << top << " " << bottom << std::endl;
+    std::cout << "Maxsum: " << maxSum << std::endl;
+    std::cout << "Bounds: " << std::endl;
+    std::cout << "Left: " << left << " Right: " << right << " Top: " << top << " Bottom: " << bottom << std::endl;
+    std::cout << "--------------------------------" << std::endl;
     std::cout << " [" << M << " ]" << std::endl;
 }
