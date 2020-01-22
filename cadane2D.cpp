@@ -1,7 +1,7 @@
 #include <iostream>
 #include <limits>
 #include <eigen3/Eigen/Dense>
-
+#include <chrono>
 using namespace Eigen;
 
 void kadane(const VectorXd &array, double &maxSum, int &l, int &r)
@@ -64,7 +64,7 @@ void maxSubarray2D(const MatrixXd &array,
 int main()
 {
     /// Size of the matrix
-    int n = 5;
+    int n = 800;
 
     /// nxn Matrix filled with random numbers between (-1,1)
     MatrixXd m = MatrixXd::Random(n, n);
@@ -77,21 +77,25 @@ int main()
     }
     double maxSum;
     int left, right, top, bottom;
+    auto start = std::chrono::high_resolution_clock::now();
     maxSubarray2D(m, maxSum, left, right, top, bottom);
-    std::cout << m << std::endl;
-    std::cout << "----------------------------" << std::endl;
-    MatrixXd M = MatrixXd(bottom - top, right - left);
+    auto stop = std::chrono::high_resolution_clock::now();
+    //std::cout << m << std::endl;
+    //std::cout << "----------------------------" << std::endl;
+    /*MatrixXd M = MatrixXd(bottom - top + 1, right - left + 1);
     for (int i = 0; i < M.rows(); i++)
     {
         for (int j = 0; j < M.cols(); j++)
         {
-            M(i, j) = m(i + top, j + right - 1);
+            M(i, j) = m(i + top, j + left);
         }
     }
-
+    */
+    auto elapsed = std::chrono::duration<double>(stop - start).count();
     std::cout << "Maxsum: " << maxSum << std::endl;
     std::cout << "Bounds: " << std::endl;
     std::cout << "Left: " << left << " Right: " << right << " Top: " << top << " Bottom: " << bottom << std::endl;
     std::cout << "--------------------------------" << std::endl;
-    std::cout << " [" << M << " ]" << std::endl;
+    //std::cout << " [" << M << " ]" << std::endl;
+    std::cout << elapsed << " seconds." << std::endl;
 }
