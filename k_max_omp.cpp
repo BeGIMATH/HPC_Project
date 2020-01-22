@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <limits>
 #include <eigen3/Eigen/Dense>
@@ -88,12 +89,14 @@ void maxSubarray2D(const MatrixXd &array,
     }
 }
 
-void update(const MatrixXd &array, int &left, int &right, int &top, int &bottom)
+void update(MatrixXd &array, int &left, int &right, int &top, int &bottom)
 {
+    int i, j;
 #pragma omp parallel for private(j)
-    for (int i = top; i <= bottom; i++)
+
+    for (i = top; i <= bottom; i++)
     {
-        for (int j = left; j <= right; j++)
+        for (j = left; j <= right; j++)
         {
             array(i, j) = -std::numeric_limits<double>::infinity();
         }
@@ -116,15 +119,20 @@ int main()
     }
     double maxSum;
     int left, right, top, bottom;
-
+    int k_th;
+    std::cout << "Dear user give us the which k-array do you want: " << std::endl;
+    std::cin >> k_th;
     auto start = std::chrono::high_resolution_clock::now();
-    maxSubarray2D(m, maxSum, left, right, top, bottom);
+    for (int i = 0; i < k_th + 1; i++)
+    {
+        maxSubarray2D(m, maxSum, left, right, top, bottom);
+        update(m, left, right, top, bottom);
+    }
     auto stop = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration<double>(stop - start).count();
     std::cout << "Maxsum: " << maxSum << std::endl;
     std::cout << "Bounds: " << std::endl;
     std::cout << "Left: " << left << " Right: " << right << " Top: " << top << " Bottom: " << bottom << std::endl;
     std::cout << "--------------------------------" << std::endl;
-    //std::cout << " [" << M << " ]" << std::endl;
     std::cout << elapsed << " seconds." << std::endl;
 }

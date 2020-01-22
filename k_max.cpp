@@ -1,10 +1,7 @@
 #include <iostream>
 #include <limits>
 #include <eigen3/Eigen/Dense>
-#include <algorithm>
 #include <chrono>
-#include <omp.h>
-
 using namespace Eigen;
 
 void kadane(const VectorXd &array, double &maxSum, int &l, int &r)
@@ -41,65 +38,40 @@ void maxSubarray2D(const MatrixXd &array,
     top = -1;
     bottom = -1;
     double sum = 0;
-
-#pragma omp parallel
+    int start, finish;
+    for (int i = 0; i < array.rows(); ++i)
     {
-        double l_maxSum = -std::numeric_limits<double>::infinity();
-        int l_left = -1;
-        int l_right = -1;
-        int l_top = -1;
-        int l_bottom = -1;
-        double l_sum = 0;
-        int l_start, l_finish;
-        // Loop over rows of 2D matrix
-#pragma omp for
-        for (int i = 0; i < array.rows(); ++i)
+        VectorXd temp = VectorXd::Zero(array.cols());
+        for (int j = i; j < array.rows(); ++j)
         {
-            // Loop over column of 2D matrix
-            VectorXd temp = VectorXd::Zero(array.cols());
-            for (int j = i; j < array.rows(); ++j)
+            for (int k = 0; k < array.cols(); ++k)
             {
-                for (int k = 0; k < array.cols(); ++k)
-                {
-                    temp(k) += array(j, k);
-                }
-                kadane(temp, l_sum, l_start, l_finish);
-                if (l_sum > l_maxSum)
-                {
-                    l_maxSum = l_sum;
-                    l_left = l_start;
-                    l_right = l_finish;
-                    l_top = i;
-                    l_bottom = j;
-                }
+                temp(k) += array(j, k);
             }
-        }
-#pragma omp critical
-        {
-            if (l_maxSum > maxSum)
+            kadane(temp, sum, start, finish);
+            if (sum > maxSum)
             {
-                maxSum = l_maxSum;
-                left = l_left;
-                right = l_right;
-                top = l_top;
-                bottom = l_bottom;
+                maxSum = sum;
+                left = start;
+                right = finish;
+                top = i;
+                bottom = j;
             }
         }
     }
 }
 
-void update(const MatrixXd &array, int &left, int &right, int &top, int &bottom)
+void update(MatrixXd &array, int &left, int &right, int &top, int &bottom)
 {
-#pragma omp parallel for private(j)
-    for (int i = top; i <= bottom; i++)
+    int i, j;
+    for (i = top; i <= bottom; i++)
     {
-        for (int j = left; j <= right; j++)
+        for (j = left; j <= right; j++)
         {
             array(i, j) = -std::numeric_limits<double>::infinity();
         }
     }
 }
-
 int main()
 {
     /// Size of the matrix
@@ -116,15 +88,20 @@ int main()
     }
     double maxSum;
     int left, right, top, bottom;
-
+    int k_th;
+    std::cout << "Dear user give us the which k-array do you want: " << std::endl;
+    std::cin >> k_th;
     auto start = std::chrono::high_resolution_clock::now();
-    maxSubarray2D(m, maxSum, left, right, top, bottom);
+    for (int i = 0; i < k_th + 1; i++)
+    {
+        maxSubarray2D(m, maxSum, left, right, top, bottom);
+        update(m, left, right, top, bottom);
+    }
     auto stop = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration<double>(stop - start).count();
     std::cout << "Maxsum: " << maxSum << std::endl;
     std::cout << "Bounds: " << std::endl;
     std::cout << "Left: " << left << " Right: " << right << " Top: " << top << " Bottom: " << bottom << std::endl;
     std::cout << "--------------------------------" << std::endl;
-    //std::cout << " [" << M << " ]" << std::endl;
     std::cout << elapsed << " seconds." << std::endl;
 }
