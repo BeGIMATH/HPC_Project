@@ -7,7 +7,6 @@
 
 using namespace Eigen;
 
-/*The function which performs the 1D Kadane algorithm*/
 void kadane(const VectorXd &array, double &maxSum, int &l, int &r)
 {
     maxSum = -std::numeric_limits<double>::infinity();
@@ -31,19 +30,20 @@ void kadane(const VectorXd &array, double &maxSum, int &l, int &r)
         }
     }
 }
-void maxSubarray2D(const MatrixXd &array, double &maxSum, int &left, int &right, int &top, int &bottom)
+
+void maxSubarray2D(const MatrixXd &array,
+                   double &maxSum, int &left, int &right, int &top, int &bottom)
 {
+
     maxSum = -std::numeric_limits<double>::infinity();
     left = -1;
     right = -1;
     top = -1;
     bottom = -1;
-    /*Enter the parallel region*/
+    double sum = 0;
 
 #pragma omp parallel
     {
-
-        //Create local variables for kadane 2D
         double l_maxSum = -std::numeric_limits<double>::infinity();
         int l_left = -1;
         int l_right = -1;
@@ -51,36 +51,26 @@ void maxSubarray2D(const MatrixXd &array, double &maxSum, int &left, int &right,
         int l_bottom = -1;
         double l_sum = 0;
         int l_start, l_finish;
-        //Why this way of parallelizing is slower ?
-        //Then the sequential one
-        //Number of elements to compute per processors
-        int size = (array.rows() + 1) * array.rows() / (2 * omp_get_num_threads());
-        //Define bounds of iteration
-
-        int lo, hi;
-        int id = omp_get_thread_num();
-        for (int l = 0; l < 1; l++)
+        // Loop over rows of 2D matrix
+#pragma omp for
+        for (int i = 0; i < array.rows(); ++i)
         {
-            lo = (l == 0) ? id * size : array.rows() - (id + 1) * size;
-            hi = (l == 0) ? (id + 1) * size : array.rows() - id * size;
-            for (int i = 0; i < hi; ++i)
+            // Loop over column of 2D matrix
+            VectorXd temp = VectorXd::Zero(array.cols());
+            for (int j = i; j < array.rows(); ++j)
             {
-                VectorXd temp = VectorXd::Zero(array.cols());
-                for (int j = i; j < array.rows(); ++j)
+                for (int k = 0; k < array.cols(); ++k)
                 {
-                    for (int k = 0; k < array.cols(); ++k)
-                    {
-                        temp(k) += array(j, k);
-                    }
-                    kadane(temp, l_sum, l_start, l_finish);
-                    if (l_sum > l_maxSum)
-                    {
-                        l_maxSum = l_sum;
-                        l_left = l_start;
-                        l_right = l_finish;
-                        l_top = i;
-                        l_bottom = j;
-                    }
+                    temp(k) += array(j, k);
+                }
+                kadane(temp, l_sum, l_start, l_finish);
+                if (l_sum > l_maxSum)
+                {
+                    l_maxSum = l_sum;
+                    l_left = l_start;
+                    l_right = l_finish;
+                    l_top = i;
+                    l_bottom = j;
                 }
             }
         }
@@ -100,9 +90,10 @@ void maxSubarray2D(const MatrixXd &array, double &maxSum, int &left, int &right,
 
 int main()
 {
-    //Size of teh matrix
+    /// Size of the matrix
+    int n = 1000;
 
-    int n = 800;
+    /// nxn Matrix filled with random numbers between (-1,1)
     MatrixXd m = MatrixXd::Random(n, n);
     for (int i = 0; i < m.rows(); i++)
     {
@@ -111,27 +102,17 @@ int main()
             m(i, j) = static_cast<int>(10.0 * m(i, j));
         }
     }
-    auto start = std::chrono::high_resolution_clock::now();
     double maxSum;
     int left, right, top, bottom;
+
+    auto start = std::chrono::high_resolution_clock::now();
     maxSubarray2D(m, maxSum, left, right, top, bottom);
     auto stop = std::chrono::high_resolution_clock::now();
-    /*
-    MatrixXd M = MatrixXd(bottom - top + 1, right - left + 1);
-    
-    for (int i = 0; i < M.rows(); i++)
-    {
-        for (int j = 0; j < M.cols(); j++)
-        {
-            M(i, j) = m(i + top, j + left);
-        }
-    }
-    */
     auto elapsed = std::chrono::duration<double>(stop - start).count();
     std::cout << "Maxsum: " << maxSum << std::endl;
     std::cout << "Bounds: " << std::endl;
     std::cout << "Left: " << left << " Right: " << right << " Top: " << top << " Bottom: " << bottom << std::endl;
     std::cout << "--------------------------------" << std::endl;
-    std::cout << elapsed << " seconds." << std::endl;
     //std::cout << " [" << M << " ]" << std::endl;
+    std::cout << elapsed << " seconds." << std::endl;
 }
