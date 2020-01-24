@@ -52,13 +52,17 @@ void maxSubarray2D(const MatrixXd &array,
         double l_sum = 0;
         int l_start, l_finish;
         // Loop over rows of 2D matrix
-#pragma omp for
+
+#pragma omp for schedule(dynamic)
         for (int i = 0; i < array.rows(); ++i)
         {
             // Loop over column of 2D matrix
             VectorXd temp = VectorXd::Zero(array.cols());
             for (int j = i; j < array.rows(); ++j)
             {
+                int k1 = omp_get_num_threads();
+
+#pragma omp parallel for schedule(static, int(array.cols() / k1))
                 for (int k = 0; k < array.cols(); ++k)
                 {
                     temp(k) += array(j, k);
@@ -88,12 +92,13 @@ void maxSubarray2D(const MatrixXd &array,
     }
 }
 
-void update(const MatrixXd &array, int &left, int &right, int &top, int &bottom)
+void update(MatrixXd &array, int &left, int &right, int &top, int &bottom)
 {
+    int j;
 #pragma omp parallel for private(j)
     for (int i = top; i <= bottom; i++)
     {
-        for (int j = left; j <= right; j++)
+        for (j = left; j <= right; j++)
         {
             array(i, j) = -std::numeric_limits<double>::infinity();
         }
@@ -116,10 +121,20 @@ int main()
     }
     double maxSum;
     int left, right, top, bottom;
-
     auto start = std::chrono::high_resolution_clock::now();
     maxSubarray2D(m, maxSum, left, right, top, bottom);
     auto stop = std::chrono::high_resolution_clock::now();
+    //std::cout << m << std::endl;
+    //std::cout << "----------------------------" << std::endl;
+    /*MatrixXd M = MatrixXd(bottom - top + 1, right - left + 1);
+    for (int i = 0; i < M.rows(); i++)
+    {
+        for (int j = 0; j < M.cols(); j++)
+        {
+            M(i, j) = m(i + top, j + left);
+        }
+    }
+    */
     auto elapsed = std::chrono::duration<double>(stop - start).count();
     std::cout << "Maxsum: " << maxSum << std::endl;
     std::cout << "Bounds: " << std::endl;

@@ -64,7 +64,7 @@ void maxSubarray2D(const MatrixXd &array,
 int main()
 {
     /// Size of the matrix
-    int n = 1000;
+    int n = 500;
 
     /// nxn Matrix filled with random numbers between (-1,1)
     MatrixXd m = MatrixXd::Random(n, n);
