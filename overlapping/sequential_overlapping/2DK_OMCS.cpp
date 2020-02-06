@@ -8,15 +8,22 @@ using namespace std;
 
 std::vector<double> doublewoDKmax(vector<double> M, int K,int rows, int col){
 
+  std::cout << "Beginning" << std::endl;
   // Set of all intervals (s,t) in increasing order
   vector<int> sortedPairs = findSortedCombinations(rows);
   // Last input == 1 for left, ==0 for right
-
+  std::cout << "Find the convex shapes" << std::endl;
   vector<double> F_w = findConvex(M,sortedPairs,K,1,rows,col);
   vector<double> F_n = findConvex(M,sortedPairs,K,0,rows,col);
 
+  std::cout<<"hop "<<endl;
+  for (std::vector<double>::iterator it=F_n.begin(); it!=F_n.end(); ++it)
+    std::cout << ' ' << *it;
+  std::cout << '\n';
+
+  std::cout << "Finalize" << std::endl;
   // Finilization: adding left and right convex shapes
-  vector<double> F_wn;
+  vector<double> F_wn(col*rows*rows*K,-std::numeric_limits<double>::infinity());
   for (int k=1;k<col;k++){
       for(int s=0;s<rows;s++){
           for(int t=0;t<rows;t++){
@@ -32,13 +39,19 @@ std::vector<double> doublewoDKmax(vector<double> M, int K,int rows, int col){
               addInt(temp,summarize(M,k,s,t,rows));
 
               for(int j = 0;j<K;j++){
-                  F_w[k*rows*rows*K + s*rows*K + t*K + j] = temp[j];
+                  F_wn[k*rows*rows*K + s*rows*K + t*K + j] = temp[j];
 
               }
 
           }
       }
   }
+  std::cout << "Sort the vector" << std::endl;
+
+  // for (std::vector<double>::iterator it=F_wn.begin(); it!=F_wn.end(); ++it)
+  //   std::cout << ' ' << *it;
+  // std::cout << '\n';
+
   std::sort(F_wn.begin(), F_wn.end());
 
   std::vector<double>::iterator it;
@@ -48,9 +61,14 @@ std::vector<double> doublewoDKmax(vector<double> M, int K,int rows, int col){
 
   std::reverse(F_wn.begin(),F_wn.end());
 
+  std::cout << "Extract the K maximal sums" << std::endl;
+
   vector<double>::const_iterator first = F_wn.begin();
-  vector<double>::const_iterator last = F_wn.begin() + K;
+  vector<double>::const_iterator last = F_wn.end();
+
   vector<double> K_overlap(first, last);
+
+  std::cout << "Result" << std::endl;
 
   return K_overlap;
 
@@ -61,6 +79,7 @@ std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPai
   //int m = sizeof(M,1); //N.of. rows
   //int n = sizeof(M,2); //N.of columns
   int num_of_comb = numberOfCombinations(rows);
+
   std::vector<double> F_w(col*rows*rows*K,-std::numeric_limits<double>::infinity());
 
   // set all k=0 values to 0 for sets s<= t
