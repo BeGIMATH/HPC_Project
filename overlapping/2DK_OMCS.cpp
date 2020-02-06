@@ -5,34 +5,34 @@
 #include <iostream>
 using namespace std;
 
-void 2DKmax(vector<double> M, int K,int rows, int col){
+void TwoDKmax(vector<double> M, int K,int rows, int col){
     // n is the number of columns??
-    int m = rows;
-    int n = col;
+    //int m = rows;
+    //int n = col;
     // Set of all intervals (s,t) in increasing order
-    vector<int> sortedPairs = findSortedCombinations(m);
+    vector<int> sortedPairs = findSortedCombinations(rows);
     // Last input == 1 for left, ==0 for right
-    vector<double> F_w = findConvex(M,sortedPairs,K,1);
-    vector<double> F_n = findConvex(M,sortedPairs,K,0);
+    vector<double> F_w = findConvex(M,sortedPairs,K,1,rows,col);
+    vector<double> F_n = findConvex(M,sortedPairs,K,0,rows,col);
     
     // Finilization: adding left and right convex shapes
     vector<double> F_wn;
-    for (int k=1;k<n;k++){
-        for(int s=0;s<m;s++){
-            for(int t=0;t<m;t++){
+    for (int k=1;k<col;k++){
+        for(int s=0;s<rows;s++){
+            for(int t=0;t<rows;t++){
                 // set a range of values to a 
-                int start = k*m*m*K + s*m*K + t*K;
-                int end = k*m*m*K+s*m*K + t*K + K;
+                int start = k*rows*rows*K + s*rows*K + t*K;
+                int end = k*rows*rows*K+s*rows*K + t*K + K;
 
                 //Herrejävlar, måste strukturera upp det här
                 vector<double> sub1(&F_w[start],&F_w[end]);
                 vector<double> sub2(&F_n[start],&F_n[end]);
                 vector<double> temp = add(sub1,sub2);
-                int tempint = summarize(M,k,s,t);
-                addInt(temp,summarize(M,k,s,t));
+                int tempint = summarize(M,k,s,t,rows);
+                addInt(temp,summarize(M,k,s,t,rows));
 
                 for(int j = 0;j<K;j++){
-                    F_w[k*m*m*K + s*m*K + t*K + j] = temp[j];
+                    F_w[k*rows*rows*K + s*rows*K + t*K + j] = temp[j];
                 }
                 //std::fill(F_wn.begin() + start, F_wn.begin() + start + end,
                           //addInt(add(sub1,sub2),summarize(M,k,s,t)));
@@ -42,11 +42,11 @@ void 2DKmax(vector<double> M, int K,int rows, int col){
 }
 
 /* Finds all possible F_w*/
-std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPairs, int K, int type){
-    int m = sizeof(M,1);
-    int n = sizeof(M,2);
-    int num_of_comb = numberOfCombinations(m);
-    std::vector<double> F_w(m*n*n*K,-std::numeric_limits<double>::infinity());
+std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPairs, int K, int type,int rows,int col){
+    //int m = sizeof(M,1); //N.of. rows
+    //int n = sizeof(M,2); //N.of columns
+    int num_of_comb = numberOfCombinations(rows);
+    std::vector<double> F_w(col*rows*rows*K,-std::numeric_limits<double>::infinity());
 
     // set all k=0 values to 0 for sets s<= t
     for (int i = 0; i<num_of_comb;i++){
@@ -71,23 +71,23 @@ std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPai
             int s = sortedPairs[i*2];
             int t = sortedPairs[i*2+1];
 
-            int start = k*m*m*K + s*m*K + t*K;
-            int end = k*m*m*K + s*m*K + t*K + K;
+            int start = k*rows*rows*K + s*rows*K + t*K;
+            int end = k*rows*rows*K + s*rows*K + t*K + K;
 
             int prev = (type==1) ? (k-1) : (k+1);
             // Subvectors of F_w corresponding to the three cases
-            std::vector<double> L1(&F_w[prev*m*m*K + s*m*K + t*K],
-                                   &F_w[prev*m*m*K + s*m*K + t*K + K]);
-            addInt(L1,summarize(M,k,s,t));
-            std::vector<double> L2(&F_w[k*m*m*K + (s+1)*m*K + t*K],
-                                   &F_w[k*m*m*K + (s+1)*m*K + t*K + K]);
+            std::vector<double> L1(&F_w[prev*rows*rows*K + s*rows*K + t*K],
+                                   &F_w[prev*rows*rows*K + s*rows*K + t*K + K]);
+            addInt(L1,summarize(M,k,s,t,rows));
+            std::vector<double> L2(&F_w[k*rows*rows*K + (s+1)*rows*K + t*K],
+                                   &F_w[k*rows*rows*K + (s+1)*rows*K + t*K + K]);
             addInt(L2,M[s,k]);
-            std::vector<double> L3(&F_w[k*m*m*K + s*m*K + (t+1)*K],
-                                   &F_w[k*m*m*K + s*m*K + (t+1)*K + K]);
+            std::vector<double> L3(&F_w[k*rows*rows*K + s*rows*K + (t+1)*K],
+                                   &F_w[k*rows*rows*K + s*rows*K + (t+1)*K + K]);
             addInt(L3,M[t,k]);
             vector<double> L_max = max(L1,L2,L3);
             for(int j = 0;j<K;j++){
-                F_w[k*m*m*K + s*m*K + t*K + j] = L_max[j];
+                F_w[k*rows*rows*K + s*rows*K + t*K + j] = L_max[j];
             }
             //std::fill(F_w.begin() + start, F_w.begin() + start + end, max(L1,L2,L3)); 
         }
@@ -128,10 +128,10 @@ std::vector<int> findSortedCombinations(int m){
  * Summarizes column k of matrix M,
  * from s to t.
  **/
-int summarize(vector<double> M,int k,int s,int t){
+int summarize(vector<double> M,int k,int s,int t, int rows){
     
     for(int i=s;i<=t;i++){
-        double sum = sum + M[i*m + k];
+        double sum = sum + M[i*rows + k];
     }
 }
 
@@ -159,5 +159,11 @@ vector<double> add(vector<double> v1, vector<double> v2){
 int main(){
     // Initialize n*n random matrix
     // Call function to compute K_max
+
+    double size_rows = 100;
+    double size_columns = 100;
+    vector<double> M;
+
+
     return 0;
 }
