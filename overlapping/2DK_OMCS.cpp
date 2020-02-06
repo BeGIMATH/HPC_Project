@@ -1,11 +1,11 @@
 //Include all the right things...
-#include <algorithm> 
+#include <algorithm>
 #include <vector>
 #include <limits>
 #include <iostream>
 using namespace std;
 
-void 2DKmax(vector<double> M, int K,int rows, int col){
+std::vector<double> TwoDKmax(vector<double> M, int K,int rows, int col){
     // n is the number of columns??
     int m = rows;
     int n = col;
@@ -14,31 +14,45 @@ void 2DKmax(vector<double> M, int K,int rows, int col){
     // Last input == 1 for left, ==0 for right
     vector<double> F_w = findConvex(M,sortedPairs,K,1);
     vector<double> F_n = findConvex(M,sortedPairs,K,0);
-    
+
     // Finilization: adding left and right convex shapes
-    vector<double> F_wn;
+    vector<double> F_wn(m*n*n*K,-std::numeric_limits<double>::infinity());
     for (int k=1;k<n;k++){
-        for(int s=0;s<m;s++){
-            for(int t=0;t<m;t++){
-                // set a range of values to a 
+        for(int s=1;s<m;s++){
+            for(int t=s;t<m;t++){
+                // set a range of values to a
                 int start = k*m*m*K + s*m*K + t*K;
                 int end = k*m*m*K+s*m*K + t*K + K;
 
-                //Herrejävlar, måste strukturera upp det här
                 vector<double> sub1(&F_w[start],&F_w[end]);
                 vector<double> sub2(&F_n[start],&F_n[end]);
                 vector<double> temp = add(sub1,sub2);
-                int tempint = summarize(M,k,s,t);
+                int tempint = summarize(M,k,s,t); //sum[k,s,t]
                 addInt(temp,summarize(M,k,s,t));
 
                 for(int j = 0;j<K;j++){
-                    F_w[k*m*m*K + s*m*K + t*K + j] = temp[j];
+                    F_wn[k*m*m*K + s*m*K + t*K + j] = temp[j];
                 }
                 //std::fill(F_wn.begin() + start, F_wn.begin() + start + end,
                           //addInt(add(sub1,sub2),summarize(M,k,s,t)));
             }
         }
     }
+    std::sort(F_wn.begin(), F_wn.end());
+
+    std::vector<int>::iterator it;
+    it = std::unique (F_wn.begin(), F_wn.end());
+
+    F_wn.resize( std::distance(F_wn.begin(),it) );
+
+    std::reverse(F_wn.begin(),F_wn.end());
+
+    vector<T>::const_iterator first = F_wn.begin() ;
+    vector<T>::const_iterator last = F_wn.begin() + K  ;
+    vector<T> K_overlap(first, last);
+
+    return K_overlap;
+
 }
 
 /* Finds all possible F_w*/
@@ -54,18 +68,17 @@ std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPai
         int t = sortedPairs[i*2+1];
         F_w[0,s,t,0] = 0;
     }
-    
-    // TODO
+
     vector<int> k_range(K);
     if (type == 1){ //left
         int x = 0;
-        std::generate(k_range.begin(), k_range.end(), [&]{ return x++; }); 
+        std::generate(k_range.begin(), k_range.end(), [&]{ return x++; });
     }
     else if (type == 0){
         int x = K-1;
-        std::generate(k_range.begin(), k_range.end(), [&]{ return x--; }); 
+        std::generate(k_range.begin(), k_range.end(), [&]{ return x--; });
     }
-    
+
     for(int k : k_range){
         for(int i=0;i<num_of_comb;i++){
             int s = sortedPairs[i*2];
@@ -89,7 +102,7 @@ std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPai
             for(int j = 0;j<K;j++){
                 F_w[k*m*m*K + s*m*K + t*K + j] = L_max[j];
             }
-            //std::fill(F_w.begin() + start, F_w.begin() + start + end, max(L1,L2,L3)); 
+            //std::fill(F_w.begin() + start, F_w.begin() + start + end, max(L1,L2,L3));
         }
     }
     return F_w;
@@ -120,7 +133,7 @@ std::vector<int> findSortedCombinations(int m){
             comb[counter*2+1] = t;
             counter++;
         }
-    }  
+    }
     return comb;
 }
 
@@ -129,7 +142,7 @@ std::vector<int> findSortedCombinations(int m){
  * from s to t.
  **/
 int summarize(vector<double> M,int k,int s,int t){
-    
+
     for(int i=s;i<=t;i++){
         double sum = sum + M[i*m + k];
     }
@@ -137,8 +150,18 @@ int summarize(vector<double> M,int k,int s,int t){
 
 /*From K-tuple L_1,...,L_m max(L_1,...) returns a tuple with the K largest elements*/
 vector<double> max(vector<double> L1, vector<double> L2, vector<double> L3){
-    // merge matrices and perform quicksort?
-    return;
+    // merge matrices and perform quicksort
+    std::vector<double> merge;
+    merge.reserve(L1.size() + L2.size() + L3.size());
+    merge.insert( merge.end(), L1.begin(), L1.end());
+    merge.insert( merge.end(), L2.begin(), L2.end());
+    merge.insert( merge.end(), L3.begin(), L3.end());
+    std::sort(merge.begin(), v.end());
+    std::reverse(merge.begin(),merge.end());
+    vector<T>::const_iterator first = merge.begin() ;
+    vector<T>::const_iterator last = merge.begin() + L1.size() ;
+    vector<T> max_vector(first, last);
+    return max_vector;
 }
 
 void addInt(vector<double> &v, int a){
@@ -158,6 +181,8 @@ vector<double> add(vector<double> v1, vector<double> v2){
 /*Implement*/
 int main(){
     // Initialize n*n random matrix
+
     // Call function to compute K_max
+    // std::vector<double> TwoDKmax(vector<double> M, int K,int rows, int col);
     return 0;
 }
