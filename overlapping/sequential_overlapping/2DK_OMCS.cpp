@@ -86,7 +86,9 @@ std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPai
   for (int i = 0; i<num_of_comb;i++){
       int s = sortedPairs[i*2];
       int t = sortedPairs[i*2+1];
-      F_w[0,s,t,0] = 0;
+      if (s<=t){
+        F_w[0,s,t,0] = 0;
+      }
   }
 
   vector<int> k_range(K);
