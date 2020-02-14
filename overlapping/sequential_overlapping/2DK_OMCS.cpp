@@ -3,7 +3,7 @@
 #include <limits>
 #include <iostream>
 #include <ctime>
-#include "2DK_OMCS.h"
+#include "2DK_OMCS.hpp"
 
 using namespace std;
 
@@ -122,7 +122,10 @@ std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPai
       std::generate(k_runge.begin(), k_runge.end(), [&]{ return x--; });
   }
 
+  std::cout<<k_runge.size()<<std::endl;
+
   for(int k : k_runge){
+      std::cout<<k<<std::endl;
       for(int i=0;i<num_of_comb;i++){
           int s = sortedPairs[i*2];
           int t = sortedPairs[i*2+1];
