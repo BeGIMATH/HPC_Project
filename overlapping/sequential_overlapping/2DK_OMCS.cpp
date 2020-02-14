@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <limits>
 #include <iostream>
+#include <ctime>
 #include "2DK_OMCS.h"
 
 using namespace std;
@@ -13,21 +14,34 @@ std::vector<double> doublewoDKmax(vector<double> M, int K,int rows, int col){
   vector<int> sortedPairs = findSortedCombinations(rows);
   // Last input == 1 for left, ==0 for right
   std::cout << "Find the convex shapes" << std::endl;
-  vector<double> F_w = findConvex(M,sortedPairs,K,1,rows,col);
-  vector<double> F_n = findConvex(M,sortedPairs,K,0,rows,col);
 
-  std::cout<<"hop "<<endl;
-  for (std::vector<double>::iterator it=F_n.begin(); it!=F_n.end(); ++it)
-    std::cout << ' ' << *it;
-  std::cout << '\n';
+  std::clock_t start;
+  double duration;
+  vector<double> F_w = findConvex(M,sortedPairs,K,1,rows,col);
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  printf("---------------------------------------------------------\n");
+  std::cout<<"Creation of left side of the convex shapes run in: "<< duration <<'\n';
+
+
+  start = 0.0;
+  vector<double> F_n = findConvex(M,sortedPairs,K,0,rows,col);
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  printf("---------------------------------------------------------\n");
+  std::cout<<"Creation of right side of the convex shapes run in: "<< duration <<'\n';
+
+  // std::cout<<"hop "<<endl;
+  // for (std::vector<double>::iterator it=F_n.begin(); it!=F_n.end(); ++it)
+  //   std::cout << ' ' << *it;
+  // std::cout << '\n';
 
   std::cout << "Finalize" << std::endl;
   // Finilization: adding left and right convex shapes
+  start = 0.0;
   vector<double> F_wn(col*rows*rows*K,-std::numeric_limits<double>::infinity());
   for (int k=1;k<col;k++){
       for(int s=0;s<rows;s++){
           for(int t=0;t<rows;t++){
-              // set a range of values to a
+              // set a runge of values to a
               int start = k*rows*rows*K + s*rows*K + t*K;
               int end = k*rows*rows*K+s*rows*K + t*K + K;
 
@@ -46,12 +60,16 @@ std::vector<double> doublewoDKmax(vector<double> M, int K,int rows, int col){
           }
       }
   }
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  printf("---------------------------------------------------------\n");
+  std::cout<<"Creation of finilized shapes run in: "<< duration <<'\n';
+
   std::cout << "Sort the vector" << std::endl;
 
   // for (std::vector<double>::iterator it=F_wn.begin(); it!=F_wn.end(); ++it)
   //   std::cout << ' ' << *it;
   // std::cout << '\n';
-
+  start = 0.0;
   std::sort(F_wn.begin(), F_wn.end());
 
   std::vector<double>::iterator it;
@@ -67,6 +85,9 @@ std::vector<double> doublewoDKmax(vector<double> M, int K,int rows, int col){
   vector<double>::const_iterator last = F_wn.end();
 
   vector<double> K_overlap(first, last);
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  printf("---------------------------------------------------------\n");
+  std::cout<<"Sorting the resulting vector and extracting the maximums run in: "<< duration <<'\n';
 
   std::cout << "Result" << std::endl;
 
@@ -91,17 +112,17 @@ std::vector<double> findConvex(std::vector<double> M, std::vector<int> sortedPai
       }
   }
 
-  vector<int> k_range(K);
+  vector<int> k_runge(K);
   if (type == 1){ //left
       int x = 0;
-      std::generate(k_range.begin(), k_range.end(), [&]{ return x++; });
+      std::generate(k_runge.begin(), k_runge.end(), [&]{ return x++; });
   }
   else if (type == 0){
       int x = K-1;
-      std::generate(k_range.begin(), k_range.end(), [&]{ return x--; });
+      std::generate(k_runge.begin(), k_runge.end(), [&]{ return x--; });
   }
 
-  for(int k : k_range){
+  for(int k : k_runge){
       for(int i=0;i<num_of_comb;i++){
           int s = sortedPairs[i*2];
           int t = sortedPairs[i*2+1];
