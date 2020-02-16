@@ -1,43 +1,44 @@
 #include <iostream>
 #include <limits>
-#include <eigen3/Eigen/Dense>
+#include "eigen/Eigen/Dense"
 #include <chrono>
 using namespace Eigen;
+/*A function to to compute the maximum subarray in 1D*/
 
-void kadane(const VectorXd &array, double &maxSum, int &l, int &r)
+void Kadane(const VectorXd &array, double &M, int &x_1, int &x_2)
 {
-    maxSum = -std::numeric_limits<double>::infinity();
-    l = 0;
-    r = 0;
-    double sum = 0;
-    int currentStartIndex = 0;
+    /*Initialize the max sum to - infinity*/
+    M = -std::numeric_limits<double>::infinity();
+    x_1 = 0;
+    x_2 = 0;
+    double t = 0;
+    int c_S_Ind = 0;
     for (int i = 0; i < array.size(); ++i)
     {
-        sum += array(i);
-        if (sum > maxSum)
+        t += array(i);
+        if (t > M)
         {
-            maxSum = sum;
-            l = currentStartIndex;
-            r = i;
+            M = t;
+            x_1 = c_S_Ind;
+            x_2 = i;
         }
-        if (sum < 0)
+        if (t < 0)
         {
-            sum = 0;
-            currentStartIndex = i + 1;
+            t = 0;
+            c_S_Ind = i + 1;
         }
     }
 }
-
-void maxSubarray2D(const MatrixXd &array,
-                   double &maxSum, int &left, int &right, int &top, int &bottom)
+void MSP2D(const MatrixXd &array,
+           double &M, int &c_1, int &c_2, int &r_1, int &r_2)
 {
 
-    maxSum = -std::numeric_limits<double>::infinity();
-    left = -1;
-    right = -1;
-    top = -1;
-    bottom = -1;
-    double sum = 0;
+    M = -std::numeric_limits<double>::infinity();
+    c_1 = -1;
+    c_2 = -1;
+    r_1 = -1;
+    r_2 = -1;
+    double t = 0;
     int start, finish;
     for (int i = 0; i < array.rows(); ++i)
     {
@@ -48,14 +49,14 @@ void maxSubarray2D(const MatrixXd &array,
             {
                 temp(k) += array(j, k);
             }
-            kadane(temp, sum, start, finish);
-            if (sum > maxSum)
+            Kadane(temp, t, start, finish);
+            if (t > M)
             {
-                maxSum = sum;
-                left = start;
-                right = finish;
-                top = i;
-                bottom = j;
+                M = t;
+                c_1 = start;
+                c_2 = finish;
+                r_1 = i;
+                r_2 = j;
             }
         }
     }
@@ -72,36 +73,43 @@ void update(MatrixXd &array, int &left, int &right, int &top, int &bottom)
         }
     }
 }
+
 int main()
 {
     /// Size of the matrix
-    int n = 1000;
-
+    //int n = 100;
+    int N[5] = {100, 200, 300, 400, 500};
     /// nxn Matrix filled with random numbers between (-1,1)
-    MatrixXd m = MatrixXd::Random(n, n);
-    for (int i = 0; i < m.rows(); i++)
+    for (int l = 0; l < 5; l++)
     {
-        for (int j = 0; j < m.cols(); j++)
+        MatrixXd m = MatrixXd::Random(N[l], N[l]);
+        for (int i = 0; i < m.rows(); i++)
         {
-            m(i, j) = static_cast<int>(10.0 * m(i, j));
+            for (int j = 0; j < m.cols(); j++)
+            {
+                m(i, j) = static_cast<int>(10.0 * m(i, j));
+            }
         }
+        double maxSum;
+        int left, right, top, bottom;
+        int k = 5;
+        //int k = 10;
+        //int k = 20;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < k; i++)
+        {
+            MSP2D(m, maxSum, left, right, top, bottom);
+            /*		
+		std::cout << "Maxsum: " << maxSum << std::endl;
+    		std::cout << "Bounds: " << std::endl;
+    		std::cout << "Left: " << left << " Right: " << right << " Top: " << top << " 			Bottom: " << 	  bottom << std::endl;
+		*/
+            update(m, left, right, top, bottom);
+        }
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration<double>(stop - start).count();
+        std::cout << "--------------------------------" << std::endl;
+        std::cout << "Time for size" << N[l] << " " << elapsed << " seconds." << std::endl;
     }
-    double maxSum;
-    int left, right, top, bottom;
-    int k_th;
-    std::cout << "Dear user give us the which k-array do you want: " << std::endl;
-    std::cin >> k_th;
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < k_th + 1; i++)
-    {
-        maxSubarray2D(m, maxSum, left, right, top, bottom);
-        update(m, left, right, top, bottom);
-    }
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration<double>(stop - start).count();
-    std::cout << "Maxsum: " << maxSum << std::endl;
-    std::cout << "Bounds: " << std::endl;
-    std::cout << "Left: " << left << " Right: " << right << " Top: " << top << " Bottom: " << bottom << std::endl;
-    std::cout << "--------------------------------" << std::endl;
-    std::cout << elapsed << " seconds." << std::endl;
 }
